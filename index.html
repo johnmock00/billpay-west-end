@@ -1,0 +1,641 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><script>/* phones get the static mobile page; tablets and desktops get the 3D experience (?full=1 forces it) */(function(){try{if(/[?&]full=1/.test(location.search)){try{sessionStorage.setItem('bpFull','1')}catch(e){}return}try{if(sessionStorage.getItem('bpFull'))return}catch(e){}var ua=navigator.userAgent||'',tablet=/iPad|Tablet|Silk|Kindle|PlayBook/i.test(ua)||(/Android/i.test(ua)&&!/Mobile/i.test(ua))||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1),phone=/iPhone|iPod|Android.*Mobile|Windows Phone|BlackBerry|Opera Mini|IEMobile/i.test(ua),small=Math.min(screen.width,screen.height)<600&&matchMedia('(pointer:coarse)').matches;if(!tablet&&(phone||small))location.replace('mobile.html')}catch(e){}})();</script>
+<link rel="prefetch" href="street.html#from-book"><link rel="prefetch" href="assets/scene.glb" as="fetch" crossorigin><link rel="prefetch" href="assets/facade.webp"><link rel="prefetch" href="assets/env.hdr" as="fetch" crossorigin>
+<style>[hidden]{display:none!important} .fade{position:fixed;inset:0;background:#120a06;opacity:0;pointer-events:none;z-index:9;transition:opacity .55s ease-in}.fade.on{opacity:1}</style></head><body>
+<title>Bill Pay: The Prelude</title>
+<meta name="description" content="A storybook on a Christmas table: Bill Pay, The West End Musical.">
+<style>
+  :root { --ink: #f6eedd; --bulb: #ffd98a; --font-body: "DM Sans", system-ui, -apple-system, sans-serif; color-scheme: dark; }
+  html, body { margin: 0; height: 100%; background: #120a06; overflow: hidden; }
+  #stage { position: fixed; inset: 0; }
+  #stage canvas { display: block; width: 100%; height: 100%; }
+  .veil { position: fixed; inset: 0; background: #120a06; transition: opacity 1.2s ease; pointer-events: none; z-index: 5; }
+  .veil.off { opacity: 0; }
+  .controls { position: fixed; left: 50%; bottom: calc(28px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 6; }
+  #hint { display: none; }
+  .hint.skip { position: static; color: rgba(246, 238, 221, .78); background: rgba(20, 12, 8, .4); border-color: rgba(255, 217, 138, .2); }
+  .hint.skip:hover { color: var(--ink); border-color: rgba(255, 217, 138, .35); }
+  .hint { display: block; position: relative;
+    padding: 9px 16px; border-radius: 999px; font: 500 13px var(--font-body); color: var(--ink); letter-spacing: .02em;
+    background: rgba(20, 12, 8, .62); border: 1px solid rgba(255, 217, 138, .35); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    transition: opacity .6s ease; white-space: nowrap; cursor: pointer; }
+  .hint.off { opacity: 0; pointer-events: none; }
+  .hint:focus-visible { outline: 2px solid var(--bulb); outline-offset: 3px; }
+  #stage { cursor: pointer; }
+  @media (prefers-reduced-motion: reduce) { .veil { transition: none; } }
+  .tune { position: fixed; top: 14px; left: 14px; z-index: 8; width: 236px; padding: 12px 14px; border-radius: 12px; display: flex; flex-direction: column; gap: 3px;
+    background: rgba(18, 10, 6, .82); border: 1px solid rgba(255, 217, 138, .3); color: var(--ink); font: 500 11.5px/1.3 var(--font-body); backdrop-filter: blur(8px); }
+  .tune b { font-size: 12.5px; margin-bottom: 4px; }
+  .tune label { display: flex; justify-content: space-between; margin-top: 4px; opacity: .85; }
+  .tune input { width: 100%; margin: 2px 0; accent-color: #e7b860; }
+  .tune-btns { display: flex; gap: 6px; margin-top: 8px; }
+  .tune-btns button { flex: 1; padding: 6px 0; border-radius: 7px; border: 1px solid rgba(255,217,138,.35); background: rgba(255,255,255,.06); color: inherit; font: inherit; cursor: pointer; }
+  .tune-note { word-break: break-all; opacity: .7; font-size: 10.5px; margin-top: 4px; }
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&display=swap">
+<div id="stage"></div>
+<div class="veil" id="veil"></div><div class="fade" id="fade"></div>
+<div class="controls"><button class="hint off" id="hint" type="button">Open the book</button><button class="hint skip off" id="skip" type="button">Skip intro</button></div>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+const A = ""; const ASSET = {"table_new.jpg": "book/table_new.webp", "cover.jpg": "book/cover.webp", "cover_rm.png": "book/cover_rm.webp", "cover_gold.png": "book/cover_gold.webp", "back.jpg": "book/back.webp", "leather.jpg": "book/leather.webp", "endpaper.jpg": "book/endpaper.webp", "page_l.jpg": "book/page_l.webp", "page_r.jpg": "book/page_r.webp", "pageedge.jpg": "book/pageedge.webp", "ribbon.png": "book/ribbon.webp", "height_flat.png": "book/height_flat.png", "dominion_ink.png": "book/dominion_ink.webp", "cast_film.jpg": "book/cast_film.webp", "stage_film.jpg": "book/stage_film.webp", "crowd_film.jpg": "book/crowd_film.webp", "tophat_film.jpg": "book/tophat_film.webp", "diva_film.jpg": "book/diva_film.webp", "audience_film.jpg": "book/audience_film.webp"};
+// ---------- the photograph the table is rebuilt from ----------
+// A 30° lens looking down at the table, tipped 10° toward the viewer (just enough to see the book's lower edge).
+const PHOTO = { w: 3342, h: 1882, fov: 30, tilt: THREE.MathUtils.degToRad(10) };
+const PHOTO_ASPECT = PHOTO.w / PHOTO.h;
+// the closed book's cover in the photo, in 2000-wide pixel coordinates: TL, TR, BR, BL
+const COVER_QUAD = [[685, 200], [1302, 198], [1320, 915], [682, 918]];
+const PX = (x, y) => [x / 2000, y / (2000 / PHOTO_ASPECT)];
+
+// ---------- book dimensions (metres) ----------
+const BOOK = { W: 0.22, tb: 0.0042, tp: 0.026, ov: 0.004, ts: 0.006 };   // board width, board & page-block thickness, board overhang, spine
+BOOK.T = BOOK.tb * 2 + BOOK.tp;
+
+const stage = document.getElementById('stage');
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.NoToneMapping;          // the table is the photograph itself; keep it exactly as shot
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+stage.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#120a06');
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+
+// photo camera: where the photograph was "taken" from. D is solved so the book's cover measures BOOK.W across.
+const photoCam = new THREE.PerspectiveCamera(PHOTO.fov, PHOTO_ASPECT, 0.01, 20);
+function placePhotoCam(D) { photoCam.position.set(0, D * Math.cos(PHOTO.tilt), D * Math.sin(PHOTO.tilt)); photoCam.lookAt(0, 0, 0); photoCam.updateMatrixWorld(); }
+const _ray = new THREE.Raycaster();
+function backProject(u, v, y) {            // photo uv (0..1, v down) -> point on the plane at height y
+  _ray.setFromCamera(new THREE.Vector2(u * 2 - 1, 1 - v * 2), photoCam);
+  const t = (y - _ray.ray.origin.y) / _ray.ray.direction.y;
+  return _ray.ray.origin.clone().addScaledVector(_ray.ray.direction, t);
+}
+let D = 1; placePhotoCam(D);
+for (let i = 0; i < 3; i++) {
+  const tl = backProject(...PX(...COVER_QUAD[0]), BOOK.T), tr = backProject(...PX(...COVER_QUAD[1]), BOOK.T);
+  const bl = backProject(...PX(...COVER_QUAD[3]), BOOK.T), br = backProject(...PX(...COVER_QUAD[2]), BOOK.T);
+  const w = (tl.distanceTo(tr) + bl.distanceTo(br)) / 2;
+  D *= BOOK.W / w; placePhotoCam(D);
+}
+const Q = COVER_QUAD.map(p => backProject(...PX(...p), BOOK.T));
+BOOK.H = BOOK.W * ((Q[0].distanceTo(Q[3]) + Q[1].distanceTo(Q[2])) / (Q[0].distanceTo(Q[1]) + Q[3].distanceTo(Q[2])));
+const BOOK_CENTER = new THREE.Vector3((Q[0].x + Q[1].x + Q[2].x + Q[3].x) / 4, 0, (Q[0].z + Q[1].z + Q[2].z + Q[3].z) / 4);
+
+// ---------- textures ----------
+const tl = new THREE.TextureLoader();
+const aniso = renderer.capabilities.getMaxAnisotropy();
+const tex = (f, srgb = true, wrap) => { const t = tl.load(ASSET[f]); if (srgb) t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = aniso; if (wrap) t.wrapS = t.wrapT = wrap; return t; };
+const T = {
+  table: tex('table_new.jpg', true, THREE.MirroredRepeatWrapping), cover: tex('cover.jpg'), coverRM: tex('cover_rm.png', false), gold: tex('cover_gold.png', false),
+  back: tex('back.jpg'), leather: tex('leather.jpg', true, THREE.RepeatWrapping), endpaper: tex('endpaper.jpg'),
+  pageL: tex('page_l.jpg'), pageR: tex('page_r.jpg'), edge: tex('pageedge.jpg', true, THREE.RepeatWrapping), ribbon: tex('ribbon.png'),
+};
+
+// ---------- the table: the photograph rebuilt as a relief ----------
+// every vertex sits where its own photo pixel's ray meets the hand-modelled height of the props (cup, teapot, crackers, tree...)
+const table = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshBasicMaterial({ map: T.table, vertexColors: true, toneMapped: false }));
+scene.add(table);
+function buildTable(img) {
+  const c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
+  const g = c.getContext('2d'); g.drawImage(img, 0, 0); const hd = g.getImageData(0, 0, c.width, c.height).data;
+  const hAt = (u, v) => {                  // mirrored outside the photo, matching the texture wrap
+    const m = x => { x = ((x % 2) + 2) % 2; return x > 1 ? 2 - x : x; };
+    const x = Math.min(c.width - 1, Math.round(m(u) * (c.width - 1))), y = Math.min(c.height - 1, Math.round(m(v) * (c.height - 1)));
+    return hd[(y * c.width + x) * 4] / 255 * 0.25;
+  };
+  const U0 = -0.35, U1 = 1.35, V0 = -0.9, V1 = 1.9, NU = 420, NV = 330;
+  const pos = new Float32Array((NU + 1) * (NV + 1) * 3), uv = new Float32Array((NU + 1) * (NV + 1) * 2), col = new Float32Array((NU + 1) * (NV + 1) * 3);
+  let k = 0;
+  for (let j = 0; j <= NV; j++) for (let i = 0; i <= NU; i++) {
+    const u = U0 + (U1 - U0) * i / NU, v = V0 + (V1 - V0) * j / NV;
+    const p = backProject(u, v, hAt(u, v));
+    pos.set([p.x, p.y, p.z], k * 3); uv.set([u, 1 - v], k * 2);
+    // beyond the photograph the table falls away into candle-lit darkness
+    const ou = Math.max(0, -u, u - 1) * 3.2, ov = Math.max(0, -v, v - 1) * 2.2, f = ou + ov === 0 ? 1 : 0.55 + 0.45 * Math.exp(-(ou * ou + ov * ov) * 6);   // the table carries on (mirrored) past the photo, a little darker
+    col.set([f, f, f], k * 3); k++;
+  }
+  const idx = [];
+  for (let j = 0; j < NV; j++) for (let i = 0; i < NU; i++) { const a = j * (NU + 1) + i, b = a + 1, c2 = a + NU + 1, d = c2 + 1; idx.push(a, c2, b, b, c2, d); }
+  const geo = table.geometry; geo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); geo.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+  geo.setAttribute('color', new THREE.BufferAttribute(col, 3)); geo.setIndex(idx); geo.computeBoundingSphere();
+}
+
+// ---------- Christmas things round the book: cut out of a styled shot taken from the reading view, rebuilt as a relief ----------
+// each piece sits where its own pixel's ray (from the open-book camera) meets its height in the hand-made depth map, so it holds
+// up as the camera glides and dives; the wood under them stays the original table
+const decor = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshBasicMaterial({ transparent: true, alphaTest: 0.03, toneMapped: false, depthWrite: true }));
+decor.renderOrder = 1; scene.add(decor); window.__decor = decor;
+// the pieces are laid out by "projecting" the styled shot from the reading camera. The projector (and with it the reading
+// camera) is moved back until no piece's pixel lands on the open book (tested pixel by pixel against the book's box): the
+// arrangement keeps its framing on screen and the book simply sits smaller inside the ring, touching nothing
+let DECOR_K = 1.55, DECOR_OFF = [-0.018, 0.01];   // framing matched to the styled reference: how far back the reading camera sits, and where the shot's centre lands
+function fitSpread(aImg, proj, place) {
+  const c = document.createElement('canvas'), GW = 240, GH = Math.round(240 * aImg.height / aImg.width); c.width = GW; c.height = GH;
+  const g = c.getContext('2d'); g.drawImage(aImg, 0, 0, GW, GH); const ad = g.getImageData(0, 0, GW, GH).data;
+  const solid = []; for (let y = 0; y < GH; y++) for (let x = 0; x < GW; x++) if (ad[(y * GW + x) * 4 + 3] > 150) solid.push([(x + 0.5) / GW, (y + 0.5) / GH]);
+  const M = 0.02, box = new THREE.Box3(new THREE.Vector3(BOOK_CENTER.x - W - ts - M, 0, BOOK_CENTER.z - H / 2 - ov - M), new THREE.Vector3(BOOK_CENTER.x + W + ts + M, TT + 0.03, BOOK_CENTER.z + H / 2 + ov + M));
+  const rc = new THREE.Raycaster(), v2 = new THREE.Vector2();
+  for (let s = 1; s <= 2.2; s += 0.02) {
+    place(s);
+    let hit = false;
+    for (const [u, v] of solid) { rc.setFromCamera(v2.set(u * 2 - 1, 1 - v * 2), proj); if (rc.ray.intersectsBox(box)) { hit = true; break; } }
+    if (!hit) return s;
+  }
+  { const hits = []; for (const [u, v] of solid) { rc.setFromCamera(v2.set(u * 2 - 1, 1 - v * 2), proj); if (rc.ray.intersectsBox(box)) hits.push([+u.toFixed(3), +v.toFixed(3)]); } window.__decorHits = hits; }
+  return 2.2;
+}
+function buildDecor(img, tex, aImg) {
+  const c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
+  const g = c.getContext('2d'); g.drawImage(img, 0, 0); const hd = g.getImageData(0, 0, c.width, c.height).data;
+  const hAt = (u, v) => hd[(Math.min(c.height - 1, Math.round(v * (c.height - 1))) * c.width + Math.min(c.width - 1, Math.round(u * (c.width - 1)))) * 4] / 255 * 0.25;
+  // the projector: the reading camera with the book open, at the shot's proportions, widened a touch so the pieces clear the book
+  const A = 5576 / 3072, tanPV = Math.tan(THREE.MathUtils.degToRad(PHOTO.fov / 2)), tanPH = tanPV * PHOTO_ASPECT;
+  const fov = THREE.MathUtils.radToDeg(2 * Math.atan(tanPH / A)), dist = Math.max(D, (2 * W + 0.07) / 2 / tanPH) * CAM.zoom;
+  const proj = new THREE.PerspectiveCamera(fov, A, 0.01, 20);
+  const th = THREE.MathUtils.degToRad(CAM.tilt), yaw = THREE.MathUtils.degToRad(CAM.orbit), t0 = new THREE.Vector3(CAM.panX, 0, CAM.panZ);
+  const place = k => { const dd = dist * k; proj.position.set(t0.x + Math.sin(yaw) * Math.sin(th) * dd, dd * Math.cos(th), t0.z + Math.cos(yaw) * Math.sin(th) * dd);
+    proj.lookAt(t0); proj.updateMatrixWorld(); proj.updateProjectionMatrix(); };
+  place(DECOR_K);
+  // nothing may stand up through the open book: inside its footprint the relief lies flat (the book simply covers it)
+  const bx0 = BOOK_CENTER.x - W - 0.012, bx1 = BOOK_CENTER.x + W + ts + 0.012, bz0 = BOOK_CENTER.z - H / 2 - 0.012, bz1 = BOOK_CENTER.z + H / 2 + 0.012;
+  const NU = 300, NV = 166, pos = new Float32Array((NU + 1) * (NV + 1) * 3), uv = new Float32Array((NU + 1) * (NV + 1) * 2), rc = new THREE.Raycaster();
+  let k = 0;
+  for (let j = 0; j <= NV; j++) for (let i = 0; i <= NU; i++) {
+    const u = i / NU, v = j / NV; rc.setFromCamera(new THREE.Vector2(u * 2 - 1 + DECOR_OFF[0], 1 - v * 2 + DECOR_OFF[1]), proj);
+    const o = rc.ray.origin, d = rc.ray.direction, t = (0 - o.y) / d.y, gx = o.x + d.x * t, gz = o.z + d.z * t;
+    const inBook = gx > bx0 && gx < bx1 && gz > bz0 && gz < bz1;
+    const hh = (inBook ? 0 : hAt(u, v)) + 0.0009, tt = (hh - o.y) / d.y;
+    pos.set([o.x + d.x * tt, hh, o.z + d.z * tt], k * 3); uv.set([u, 1 - v], k * 2); k++;
+  }
+  const idx = [];
+  for (let j = 0; j < NV; j++) for (let i = 0; i < NU; i++) { const a = j * (NU + 1) + i, b = a + 1, c2 = a + NU + 1, d2 = c2 + 1; idx.push(a, c2, b, b, c2, d2); }
+  const geo = decor.geometry; geo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); geo.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+  geo.setIndex(idx); geo.computeBoundingSphere();
+  decor.material.map = tex; decor.material.needsUpdate = true;
+}
+const DECOR_ON = false;   // table decorations switched off: just the book on the table
+if (DECOR_ON) { const dt = tl.load('book/decor.webp'); dt.colorSpace = THREE.SRGBColorSpace; dt.anisotropy = aniso;
+  const il = new THREE.ImageLoader(); Promise.all([new Promise(r => il.load('book/decor_height.png', r)), new Promise(r => il.load('book/decor.webp', r))]).then(([h, a]) => buildDecor(h, dt, a)); }
+
+// dynamic shadows from the book land on an invisible catcher just above the (flat) middle of the table
+const catcher = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.55), new THREE.ShadowMaterial({ opacity: 0.42, color: 0x1a0700 }));
+catcher.rotation.x = -Math.PI / 2; catcher.position.set(BOOK_CENTER.x + 0.11, 0.0006, BOOK_CENTER.z); catcher.receiveShadow = true; scene.add(catcher);
+
+// ---------- light: warm room light from the upper left (the candle side), a soft fill, a flickering candle ----------
+const hemi = new THREE.HemisphereLight(0xfff0dc, 0x3a2414, 0.62); scene.add(hemi);
+const key = new THREE.DirectionalLight(0xffe2bf, 1.05);
+key.position.set(BOOK_CENTER.x - 0.35, 1.0, BOOK_CENTER.z - 0.25); key.target.position.copy(BOOK_CENTER); scene.add(key, key.target);
+key.castShadow = true; key.shadow.mapSize.set(2048, 2048); key.shadow.bias = -0.0008; key.shadow.normalBias = 0.0045; key.shadow.radius = 6;
+Object.assign(key.shadow.camera, { left: -0.45, right: 0.45, top: 0.35, bottom: -0.35, near: 0.2, far: 2.5 });
+const candlePos = backProject(...PX(470, 70), 0.07);
+const candle = new THREE.PointLight(0xffa64d, 0, 0.9, 2);   // off: the candle has been cleared from the table (kept for the props to come) candle.position.copy(candlePos).add(new THREE.Vector3(0, 0.03, 0)); scene.add(candle);
+
+// ---------- the story: one beat per page, read left then right across four spreads ----------
+// three spreads: the story on the left, pictures on the right, the finale last
+// a picture's src can be a file in assets/ (e.g. 'stage.jpg'); while it is null, a framed space holds its place
+const STORY = [
+  { layout: 'book/layout_p1.webp', text: "Once upon a time, Ramp put on a musical in New York, for one night only." },   // illuminated page art
+  { polaroids: ['cast_film.jpg', 'stage_film.jpg'], frame: true },   // two snapshots, laid on the page like polaroids   // photos are pre-printed in the title's red, cropped and faded at the edges like the Dominion
+  { layout: 'book/layout_p3.webp', text: "Every seat taken. Five thousand waiting. Fifty million watching, wishing they were there." },
+  { polaroids: ['crowd_film.jpg', 'tophat_film.jpg', 'diva_film.jpg', 'audience_film.jpg'], frame: true },
+  { layout: 'book/layout_p5.webp', text: "Now Ramp has made London its home, and the curtain rises again." },
+  { layout: 'book/layout_p6.webp', zoom: [1088 / 2172, 1470 / 2652] }   // "One More Night Only." over the Dominion illustration; the dive ends on its billboard   // the Dominion, printed in the title's red: where the zoom into the landing page will begin,
+];
+// ink is chosen before the pages' warm tint is applied, so it lands as dark brown and theatre red on screen
+const INK = '#2b1b11', RED = '#57100e', SERIF = '"Cormorant Garamond", Georgia, "Times New Roman", serif';
+const BIG = 158, BIG_LH = 176;   // the finale's size; the story pages match it
+const PAGES = STORY.map((_, n) => {
+  const c = document.createElement('canvas'); c.width = 1536; c.height = 1800;
+  const g = c.getContext('2d'); g.fillStyle = '#d6c3a3'; g.fillRect(0, 0, c.width, c.height);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = aniso;
+  return { c, t, left: n % 2 === 0 };
+});
+function wrapLines(g, text, maxW) {
+  const out = []; let line = '';
+  for (const w of text.split(' ')) { const tryL = line ? line + ' ' + w : w; if (g.measureText(tryL).width > maxW && line) { out.push(line); line = w; } else line = tryL; }
+  if (line) out.push(line); return out;
+}
+function ornament(g, cx, y, w) {
+  g.save(); g.strokeStyle = RED; g.fillStyle = RED; g.lineWidth = 3; g.globalAlpha = 0.8;
+  g.beginPath(); g.moveTo(cx - w / 2, y); g.lineTo(cx - 22, y); g.moveTo(cx + 22, y); g.lineTo(cx + w / 2, y); g.stroke();
+  g.beginPath(); g.moveTo(cx, y - 12); g.lineTo(cx + 12, y); g.lineTo(cx, y + 12); g.lineTo(cx - 12, y); g.closePath(); g.fill(); g.restore();
+}
+function plate(g, x, y, w, h, img, focus = [0.5, 0.5]) {          // a tipped-in picture: thin rule, photo corners, the image cropped to fill
+  g.save();
+  if (img) {
+    const s = Math.max(w / img.width, h / img.height), sw = w / s, sh = h / s;
+    const sx = THREE.MathUtils.clamp(img.width * focus[0] - sw / 2, 0, img.width - sw), sy = THREE.MathUtils.clamp(img.height * focus[1] - sh / 2, 0, img.height - sh);
+    g.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+  } else {
+    g.fillStyle = 'rgba(87,16,14,0.06)'; g.fillRect(x, y, w, h);
+    g.fillStyle = INK; g.globalAlpha = 0.45; g.textAlign = 'center'; g.font = `italic 500 64px ${SERIF}`;
+    g.fillText('Picture', x + w / 2, y + h / 2 + 20); g.globalAlpha = 1;
+  }
+  g.strokeStyle = RED; g.globalAlpha = 0.7; g.lineWidth = 3; g.strokeRect(x - 18, y - 18, w + 36, h + 36);
+  g.globalAlpha = 1; g.fillStyle = RED; const k = 70;
+  for (const [cx, cy, sx, sy] of [[x, y, 1, 1], [x + w, y, -1, 1], [x, y + h, 1, -1], [x + w, y + h, -1, -1]]) {
+    g.beginPath(); g.moveTo(cx - sx * 6, cy - sy * 6); g.lineTo(cx + sx * k, cy - sy * 6); g.lineTo(cx - sx * 6, cy + sy * k); g.closePath(); g.fill();
+  }
+  g.restore();
+}
+// a polaroid: cream card, square print, deeper lip at the bottom, a soft shadow on the page
+function polaroid(g, cx, cy, size, angle, img) {
+  const pad = size * 0.07, lip = size * 0.26, w = size + pad * 2, h = size + pad + lip;
+  g.save(); g.translate(cx, cy); g.rotate(angle);
+  g.shadowColor = 'rgba(40, 22, 10, 0.35)'; g.shadowBlur = 34; g.shadowOffsetX = 10; g.shadowOffsetY = 16;
+  g.fillStyle = '#efe5d3'; g.fillRect(-w / 2, -h / 2, w, h);
+  g.shadowColor = 'transparent';
+  const ix = -w / 2 + pad, iy = -h / 2 + pad;
+  g.fillStyle = '#d9c7a8'; g.fillRect(ix, iy, size, size);            // the print's paper, under the ink
+  if (img) g.drawImage(img, ix, iy, size, size);
+  g.strokeStyle = 'rgba(60, 35, 20, 0.18)'; g.lineWidth = 2; g.strokeRect(ix, iy, size, size);
+  g.restore();
+}
+// the illuminated page art (holly border, drop capital, lettering) printed onto the paper: white drops out, the paper shows through
+function pageArt(g, img, left, W2, H2) {
+  const h = H2 * 0.95, w = h * img.width / img.height, x = (W2 - w) / 2 + (left ? -50 : 50), y = (H2 - h) / 2;   // nudged away from the gutter
+  g.save(); g.globalCompositeOperation = 'multiply'; g.drawImage(img, x, y, w, h); g.restore();
+  return { x, y, w, h };
+}
+let FRAME_IMG = null;
+function drawPage(n, base, pic) {
+  const { c, t, left } = PAGES[n], g = c.getContext('2d'), W2 = c.width, H2 = c.height;
+  g.drawImage(base, 0, 0, W2, H2);
+  // keep clear of the gutter, which dips and darkens as the book lies open
+  const gutter = W2 * 0.15, outer = W2 * 0.11, x0 = left ? outer : gutter, x1 = left ? W2 - gutter : W2 - outer, cx = (x0 + x1) / 2;
+  g.textAlign = 'center'; g.textBaseline = 'alphabetic';
+  const item = STORY[n];
+  if (item.finale) {
+    g.fillStyle = RED; g.font = `600 ${BIG}px ${SERIF}`; if ('letterSpacing' in g) g.letterSpacing = '6px';
+    const y0 = pic ? 400 : H2 / 2 - BIG_LH / 2 + 52;
+    ornament(g, cx, y0 - 200, 380);
+    item.finale.forEach((l, i) => g.fillText(l, cx, y0 + i * BIG_LH));
+    if ('letterSpacing' in g) g.letterSpacing = '0px';
+    if (pic) {                                 // the theatre beneath the title, its edges fading into the paper
+      const iw = x1 - x0 + 40, ih = iw * pic.height / pic.width, iy = y0 + BIG_LH + 90;
+      g.drawImage(pic, cx - iw / 2, iy, iw, ih);
+      PAGES[n].plateUV = { x: cx / W2, y: (iy + ih / 2) / H2 };   // centre of the theatre on the page, for the zoom to come
+    } else ornament(g, cx, y0 + BIG_LH + 120, 380);
+  } else if (item.layout) {
+    if (pic) { const r = pageArt(g, pic, left, W2, H2);
+      if (item.zoom) PAGES[n].plateUV = { x: (r.x + item.zoom[0] * r.w) / W2, y: (r.y + item.zoom[1] * r.h) / H2 }; }
+  } else if (typeof item === 'object' && item.polaroids) {
+    if (item.frame && FRAME_IMG) pageArt(g, FRAME_IMG, left, W2, H2);    // the holly frame sits on the page, the snapshots lie over it
+    // a loose scatter: two snapshots large, four as a tighter cluster; later ones lie over earlier ones
+    const LAYOUT = {
+      2: [[-105, 540, 730, -0.09], [95, 1262, 730, 0.06]],
+      4: [[-290, 445, 570, -0.07], [320, 520, 570, 0.05], [-275, 1300, 570, 0.04], [305, 1362, 570, -0.06]],
+    }[item.polaroids.length];
+    const k = item.frame ? 0.88 : 1;   // a touch smaller so the holly frame shows round them
+    (pic || []).forEach((img, i) => { const [dx, y, size, ang] = LAYOUT[i]; polaroid(g, cx + dx * k, H2 / 2 + (y - H2 / 2) * k, size * k, ang, img); });
+  } else if (typeof item === 'object' && 'picture' in item) {
+    if (pic) {                                 // printed straight onto the page, same as the Dominion on the last page
+      const iw = x1 - x0 + 40, ih = iw * pic.height / pic.width;
+      g.drawImage(pic, cx - iw / 2, H2 * 0.46 - ih / 2, iw, ih);
+    } else { const pw = x1 - x0 - 120, ph = H2 * 0.62; plate(g, cx - pw / 2, H2 * 0.44 - ph / 2, pw, ph, null); }
+  } else {
+    g.fillStyle = INK; g.font = `500 ${BIG}px ${SERIF}`;
+    let mw = x1 - x0, lines = wrapLines(g, item, mw); const n0 = lines.length;   // balance the lines so none ends on a lone word
+    while (n0 > 1 && !lines[lines.length - 1].includes(' ') && mw > (x1 - x0) * 0.6) { const t2 = wrapLines(g, item, mw - 20); if (t2.length > n0) break; lines = t2; mw -= 20; }
+    const y0 = H2 * 0.46 - (lines.length - 1) * BIG_LH / 2 + 40;
+    lines.forEach((l, i) => g.fillText(l, cx, y0 + i * BIG_LH));
+    ornament(g, cx, y0 + (lines.length - 1) * BIG_LH + 140, 260);
+  }
+  g.fillStyle = INK; g.globalAlpha = 0.6; g.font = `italic 500 58px ${SERIF}`;
+  if (!(item.finale && pic) && !item.polaroids && !item.layout) g.fillText(String(n + 1), cx, H2 - 130); g.globalAlpha = 1;
+  t.needsUpdate = true;
+}
+const imgLoad = f => new Promise(r => new THREE.ImageLoader().load(ASSET[f] || f, r));
+const fontsReady = Promise.all([`500 ${BIG}px ${SERIF}`, `600 ${BIG}px ${SERIF}`, `italic 500 58px ${SERIF}`].map(f => document.fonts.load(f))).catch(() => {});
+const pics = Promise.all(STORY.map(it => it && it.layout ? imgLoad(it.layout) : it && it.polaroids ? Promise.all(it.polaroids.map(imgLoad)) : it && it.picture ? imgLoad(it.picture) : null));
+Promise.all([imgLoad('page_l.jpg'), imgLoad('page_r.jpg'), pics, fontsReady, imgLoad('book/layout_frame.webp')])
+  .then(([bl, br, pi, , fr]) => { FRAME_IMG = fr; PAGES.forEach((p, n) => drawPage(n, p.left ? bl : br, pi[n])); window.__pages = true; });
+
+// ---------- the book ----------
+const { W, tb, tp, ov, ts } = BOOK, H = BOOK.H, TT = BOOK.T;
+const PAGE_TINT = new THREE.Color(1.38, 1.55, 1.75);   // pages read as bright cream under the warm room light, as photographed
+const mLeather = new THREE.MeshPhysicalMaterial({ specularIntensity: 0.25, map: T.leather, roughness: 0.6, metalness: 0, bumpMap: T.leather, bumpScale: 0.6, envMapIntensity: 0.25 });
+const mCover = new THREE.MeshPhysicalMaterial({ specularIntensity: 0.25, map: T.cover, roughnessMap: T.coverRM, metalnessMap: T.coverRM, roughness: 1, metalness: 1,
+  bumpMap: T.gold, bumpScale: 1.4, envMapIntensity: 0.55 });
+const mBack = new THREE.MeshPhysicalMaterial({ specularIntensity: 0.25, map: T.back, roughness: 0.62, envMapIntensity: 0.25 });
+const mEnd = new THREE.MeshStandardMaterial({ map: T.endpaper, roughness: 0.85, envMapIntensity: 0.2 });
+const mEdge = new THREE.MeshStandardMaterial({ side: THREE.DoubleSide, color: PAGE_TINT, map: T.edge, roughness: 0.9, envMapIntensity: 0.2 });
+const mPageL = new THREE.MeshStandardMaterial({ color: PAGE_TINT, map: PAGES[0].t, roughness: 0.92, envMapIntensity: 0.2, vertexColors: true });
+const mPageR = new THREE.MeshStandardMaterial({ color: PAGE_TINT, map: PAGES[PAGES.length - 1].t, roughness: 0.92, envMapIntensity: 0.2, vertexColors: true });
+const mRibbon = new THREE.MeshStandardMaterial({ color: 0xb8b8b8, map: T.ribbon, transparent: true, alphaTest: 0.5, roughness: 0.5, envMapIntensity: 0.3, side: THREE.DoubleSide });
+T.leather.repeat.set(2, 2);
+
+const book = new THREE.Group(); book.position.copy(BOOK_CENTER); scene.add(book);
+const shadowy = o => { o.traverse(m => { if (m.isMesh) { m.castShadow = true; m.receiveShadow = true; } }); return o; };
+// a board: box with the cover art on the outside, endpaper inside, leather edges
+function board(outer, inner) {
+  const g = new THREE.BoxGeometry(W, tb, H);
+  // BoxGeometry material order: +x, -x, +y, -y, +z, -z
+  const m = new THREE.Mesh(g, [mLeather, mLeather, outer, inner, mLeather, mLeather]);
+  return shadowy(m);
+}
+// back half: back board on the table, the lower half of the page block on it
+const backBoard = board(mEnd, mBack); backBoard.position.set(0, tb / 2, 0); book.add(backBoard);
+// back board's outside faces the table: flip so cover art is underneath
+backBoard.material = [mLeather, mLeather, mEnd, mBack, mLeather, mLeather];
+
+// page stacks with a live top surface (they bow up beside the gutter as the book opens)
+const PW = W - ov - 0.0015, PH = H - ov * 2, NX = 48, NZ = 6;
+function pageStack(pageMat, flip, thick = tp / 2) {
+  // local frame: x = distance from the spine (0..PW), y = 0..tp/2 (top surface at y = tp/2, or at y = 0 for the flipped half)
+  const g = new THREE.BufferGeometry();
+  const verts = [], uvs = [], groups = [];
+  // top grid (NX x NZ), then four side strips, then bottom quad
+  for (let j = 0; j <= NZ; j++) for (let i = 0; i <= NX; i++) { verts.push(0, 0, 0); uvs.push(flip ? 1 - i / NX : i / NX, 1 - j / NZ); }
+  const topCount = (NX + 1) * (NZ + 1), idx = [];
+  for (let j = 0; j < NZ; j++) for (let i = 0; i < NX; i++) { const a = j * (NX + 1) + i, b = a + 1, c = a + NX + 1, d = c + 1; flip ? idx.push(a, b, c, b, d, c) : idx.push(a, c, b, b, c, d); }
+  groups.push([0, idx.length, 0]);
+  // side strips along the top grid's outline (fore edge, head, tail), each paired with a bottom vertex
+  const sideStart = verts.length / 3, sideIdx0 = idx.length;
+  const outline = [];
+  for (let j = 0; j <= NZ; j++) outline.push([NX, j]);                // fore edge
+  const head = [], tail = [];
+  for (let i = 0; i <= NX; i++) { head.push([i, 0]); tail.push([i, NZ]); }
+  const strips = [outline, head, tail];
+  const stripMeta = [];
+  for (const s of strips) {
+    const base = verts.length / 3;
+    s.forEach((p, n) => { verts.push(0, 0, 0, 0, 0, 0); uvs.push(n / (s.length - 1) * 4, 0, n / (s.length - 1) * 4, 1); });
+    for (let n = 0; n < s.length - 1; n++) { const a = base + n * 2, b = a + 1, c = a + 2, d = a + 3; idx.push(a, b, c, b, d, c); }   // one winding (double-sided material) so normals don't cancel
+    stripMeta.push({ base, s });
+  }
+  groups.push([sideIdx0, idx.length - sideIdx0, 1]);
+  g.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2)); g.setIndex(idx);
+  g.setAttribute('color', new THREE.Float32BufferAttribute(new Array(verts.length).fill(1), 3));
+  for (const [s, c, m] of groups) g.addGroup(s, c, m);
+  const mesh = shadowy(new THREE.Mesh(g, [pageMat, mEdge]));
+  const P = g.attributes.position;
+  mesh.userData.update = (open) => {
+    const h = thick;
+    const surf = (i, j) => {
+      const x = PW * i / NX, z = -PH / 2 + PH * j / NZ, d = x;
+      // gutter: dips into the spine, swells over the first few centimetres, settles flat toward the fore edge
+      const bow = open * (0.0075 * Math.sin(Math.min(1, d / 0.055) * Math.PI / 2) - 0.0085 * Math.exp(-d / 0.006) - 0.0035 * THREE.MathUtils.smoothstep(d, 0.06, PW));
+      return [x, flip ? -bow : h + bow, z];
+    };
+    const C = g.attributes.color;
+    for (let j = 0; j <= NZ; j++) for (let i = 0; i <= NX; i++) {
+      P.setXYZ(j * (NX + 1) + i, ...surf(i, j));
+      const d = PW * i / NX, occ = 1 - open * (0.62 * Math.exp(-d / 0.012) + 0.16 * Math.exp(-d / 0.05));   // the gutter falls into shadow
+      C.setXYZ(j * (NX + 1) + i, occ, occ * 0.97, occ * 0.94);
+    }
+    C.needsUpdate = true;
+    for (const { base, s } of stripMeta) s.forEach(([i, j], n) => {
+      const t = surf(i, j); P.setXYZ(base + n * 2, ...t); P.setXYZ(base + n * 2 + 1, t[0], flip ? h : 0, t[2]);
+    });
+    P.needsUpdate = true; g.computeVertexNormals(); g.computeBoundingSphere();
+  };
+  mesh.userData.update(0);
+  return mesh;
+}
+const stackR = pageStack(mPageR, false); stackR.position.set(-W / 2 + 0.0015, tb, 0); book.add(stackR);
+
+// front half pivots about the hinge at the spine, half-way up the book
+const hinge = new THREE.Group(); hinge.position.set(-W / 2, TT / 2, 0); book.add(hinge);
+const frontBoard = board(mCover, mEnd); frontBoard.position.set(W / 2, TT / 2 - tb / 2, 0); hinge.add(frontBoard);
+// the cover carries most of the front pages over as a block; then a few loose leaves turn on their own, bending like paper
+const NLEAF = (STORY.length - 2) / 2, LEAF_T = (tp / 2) / 24, LNX = 40, LNZ = 6, LL = PW;
+// leaf k (in turning order) carries page 2k+2 on its front and page 2k+3 on its back; the back is read mirrored
+const leafMat = (n, back) => {
+  const t = PAGES[n].t; if (back) { t.wrapS = THREE.RepeatWrapping; t.repeat.x = -1; t.offset.x = 1; }
+  return new THREE.MeshStandardMaterial({ color: PAGE_TINT, map: t, roughness: 0.92, envMapIntensity: 0.2, vertexColors: true, side: back ? THREE.BackSide : THREE.FrontSide });
+};
+const bowAt = d => 0.0075 * Math.sin(Math.min(1, d / 0.055) * Math.PI / 2) - 0.0085 * Math.exp(-d / 0.006) - 0.0035 * THREE.MathUtils.smoothstep(d, 0.06, PW);
+const leaves = [];
+for (let i = 0; i < NLEAF; i++) {
+  const g = new THREE.BufferGeometry(), n = (LNX + 1) * (LNZ + 1), uv = [], idx = [];
+  for (let j = 0; j <= LNZ; j++) for (let k = 0; k <= LNX; k++) uv.push(k / LNX, 1 - j / LNZ);
+  for (let j = 0; j < LNZ; j++) for (let k = 0; k < LNX; k++) { const a = j * (LNX + 1) + k, b = a + 1, c = a + LNX + 1, d = c + 1; idx.push(a, c, b, b, c, d); }
+  g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(n * 3), 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  g.setAttribute('color', new THREE.BufferAttribute(new Float32Array(n * 3).fill(1), 3)); g.setIndex(idx);
+  const order = NLEAF - 1 - i;
+  const front = new THREE.Mesh(g, leafMat(1 + order * 2, false)), back = new THREE.Mesh(g, leafMat(2 + order * 2, true));
+  for (const m of [front, back]) { m.castShadow = true; m.receiveShadow = true; book.add(m); }
+  // i = 0 is the bottom of the pile when closed; the top leaf (under the cover) turns first and ends at the bottom on the left
+  leaves.push({ g, order, y0: tb + tp / 2 + (i + 0.5) * LEAF_T, y1: tb + tp / 2 - NLEAF * LEAF_T + (order + 0.5) * LEAF_T, seed: Math.sin(i * 12.9898) * 0.5 });
+}
+const LEFT_BLOCK = tp / 2 - NLEAF * LEAF_T;
+const stackL = pageStack(mPageL, true, LEFT_BLOCK); stackL.position.set(0.0015, NLEAF * LEAF_T, 0); hinge.add(stackL);   // its "top" is the face nearest the leaves
+const easeIO = t => t * t * (3 - 2 * t);
+function poseLeaf(L, p, settle, flat = 0) {
+  const P = L.g.attributes.position, C = L.g.attributes.color;
+  const e = easeIO(p), th0 = Math.PI * e;
+  // the fore edge leads as the sheet lifts (curling up off the page below), then trails as it falls onto the left,
+  // so the paper always arcs away from the pages either side of it
+  const bend = Math.sin(Math.PI * p) * (1.25 * (1 - 2 * e) - 0.45) * (1 + 0.2 * L.seed);
+  const twist = 0.3 * Math.sin(Math.PI * p);                          // the near corner leads, as when a page is lifted by its corner
+  const hx = -W / 2 + 0.0015, hy = THREE.MathUtils.lerp(L.y0, L.y1, e);
+  const ds = LL / LNX, gap = LEAF_T * 0.6;
+  for (let j = 0; j <= LNZ; j++) {
+    const z = -PH / 2 + PH * j / LNZ, zt = z / (PH / 2);
+    let x = hx, y = hy;
+    for (let k = 0; k <= LNX; k++) {
+      const s = k / LNX;
+      if (k > 0) {
+        const th = THREE.MathUtils.clamp(th0 + bend * Math.pow(s, 1.2) + twist * s * zt, 0, Math.PI);   // never angled down into either page block
+        x += ds * Math.cos(th); y += ds * Math.sin(th);
+      }
+      const d = k * ds, dx = Math.abs(x - hx);
+      // the sheet can rest on the pages beneath it, never sink into them: on the right that is where it lay, on the left where it will lie
+      const floor = (x >= hx ? L.y0 : L.y1) + flat * bowAt(dx) - gap;
+      const yy = Math.max(y + settle * bowAt(d), floor, 0.0005);
+      P.setXYZ(j * (LNX + 1) + k, x, yy, z);
+      const occ = 1 - settle * (0.62 * Math.exp(-d / 0.012) + 0.16 * Math.exp(-d / 0.05));
+      C.setXYZ(j * (LNX + 1) + k, occ, occ * 0.97, occ * 0.94);
+    }
+  }
+  P.needsUpdate = true; C.needsUpdate = true; L.g.computeVertexNormals(); L.g.computeBoundingSphere();
+}
+// the spine: a rounded leather back that flattens under the gutter as the book opens
+const spine = shadowy(new THREE.Mesh(new THREE.CylinderGeometry(1, 1, H, 24, 1, true, Math.PI, Math.PI), mLeather));
+spine.rotation.x = Math.PI / 2; book.add(spine);
+
+// ribbon marker: lies out from under the tail of the book; finds the gutter once the book is open
+const ribbon = shadowy(new THREE.Mesh(new THREE.PlaneGeometry(0.0105, 0.036), mRibbon)); ribbon.rotation.x = -Math.PI / 2; ribbon.castShadow = false; scene.add(ribbon);
+const ribbonGutter = shadowy(new THREE.Mesh(new THREE.PlaneGeometry(0.008, PH * 0.94), new THREE.MeshStandardMaterial({ color: 0x5a0a10, roughness: 0.4, transparent: true, opacity: 0, envMapIntensity: 0.3 })));
+ribbonGutter.rotation.x = -Math.PI / 2; ribbonGutter.castShadow = false; scene.add(ribbonGutter);
+
+// soft contact shadow under the book (the photo's own shadow was painted out with the book)
+const cs = (() => { const c = document.createElement('canvas'); c.width = 256; c.height = 256; const g = c.getContext('2d');
+  g.shadowColor = 'rgba(10,3,0,0.9)'; g.shadowBlur = 36; g.shadowOffsetX = 1000; g.fillStyle = '#000'; g.fillRect(44 - 1000, 40, 168, 176);   // blurred box without canvas filters (Safari)
+  return new THREE.CanvasTexture(c); })();
+const contact = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: cs, transparent: true, depthWrite: false, toneMapped: false }));
+contact.rotation.x = -Math.PI / 2; contact.renderOrder = 1; scene.add(contact);
+
+// ---------- opening ----------
+const SLIDE = W / 2 + ts / 2; let camOpen = 0;          // the book slides so the spread ends up centred where the closed book was
+const ease = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+// timeline (seconds): the cover opens, then each spread rests for a read before the next leaf turns
+const SEQ = { cover: 3.2, hold: 1.1, flip: 1.4, rewind: 5 };   // rewind: how many times faster the book closes
+// the first spread is on show from the moment the cover lands (45% into the cover move), so later spreads get the same time
+SEQ.read = 5.0;   // time to read each spread before the next page turns
+SEQ.end = SEQ.cover + SEQ.hold + (NLEAF - 1) * (SEQ.flip + SEQ.read) + SEQ.flip;
+let seqT = 0, seqGoal = 0;
+function poseAt(t) {
+  const lp = leaves.map((_, k) => THREE.MathUtils.clamp((t - SEQ.cover - SEQ.hold - k * (SEQ.flip + SEQ.read)) / SEQ.flip, 0, 1));
+  pose(THREE.MathUtils.clamp(t / SEQ.cover, 0, 1), lp);
+}
+function pose(o, lp = [0, 0, 0]) {
+  hinge.rotation.z = Math.PI * ease(Math.min(1, o / 0.45));              // the cover and most of the front pages swing over first
+  book.position.x = BOOK_CENTER.x + SLIDE;                              // the book stays put on the table; the camera glides across with it as it opens
+  camOpen = o;
+  const flat = THREE.MathUtils.smoothstep(o, 0.08, 0.5);              // the page block settles into its open curve as the cover swings, not after
+  stackR.userData.update(flat); stackL.userData.update(flat);
+  for (const L of leaves) {                                              // then the leaves follow, one after another
+    const p = lp[L.order];   // resting leaves follow the bowed page block on either side; mid-turn they lift free
+    poseLeaf(L, p, flat * Math.max(THREE.MathUtils.smoothstep(p, 0.75, 1), 1 - THREE.MathUtils.smoothstep(p, 0, 0.25)), flat);
+  }
+  // spine: a half-round that sinks under the gutter as the boards open
+  const r = THREE.MathUtils.lerp(TT / 2, tb, flat), sx = THREE.MathUtils.lerp(ts, 0.004, flat);
+  spine.scale.set(sx, 1, r); spine.position.set(-W / 2, THREE.MathUtils.lerp(TT / 2, tb * 0.5, flat), 0);
+  spine.rotation.set(Math.PI / 2, 0, 0); spine.rotateY(0);
+  hinge.position.y = THREE.MathUtils.lerp(TT / 2, TT / 2, flat);
+  // ribbon: from beside the spine (as photographed) to the middle of the gutter
+  const rx = THREE.MathUtils.lerp(-W / 2 + 0.0346, -W / 2, flat);
+  ribbon.position.set(book.position.x + rx, 0.0012, book.position.z + H / 2 + 0.017); ribbon.visible = ribbonGutter.visible = false;   // no ribbon marker
+  ribbonGutter.position.set(book.position.x - W / 2, tb + tp / 2 - 0.002, book.position.z + 0.01);
+  ribbonGutter.material.opacity = THREE.MathUtils.smoothstep(o, 0.85, 1);
+  // contact shadow grows with the footprint
+  const fw = THREE.MathUtils.lerp(W, 2 * W, ease(o)) + 0.05, cx = book.position.x + THREE.MathUtils.lerp(0, -W / 2, ease(o));
+  contact.scale.set(fw * 1.08, H * 1.12 + 0.04, 1); contact.position.set(cx, 0.0004, book.position.z + 0.003);
+}
+pose(0);
+
+// ---------- camera: the photograph's own view on wide screens; pulled back on tall ones so the open spread fits ----------
+const camera = new THREE.PerspectiveCamera(PHOTO.fov, 1, 0.01, 20);
+const ptr = { x: 0, y: 0, sx: 0, sy: 0 };
+function frame() {
+  const w = stage.clientWidth, h = stage.clientHeight; if (!w || !h) return;
+  renderer.setSize(w, h, false); camera.aspect = w / h;
+  const tanPhotoV = Math.tan(THREE.MathUtils.degToRad(PHOTO.fov / 2)), tanPhotoH = tanPhotoV * PHOTO_ASPECT;
+  // wide: crop top/bottom of the photo (fill width); narrower than the photo: keep its height
+  camera.fov = camera.aspect >= PHOTO_ASPECT ? THREE.MathUtils.radToDeg(2 * Math.atan(tanPhotoH / camera.aspect)) : PHOTO.fov;
+  camera.updateProjectionMatrix();
+  const tanH = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.aspect;
+  const need = (2 * W + 0.07) / 2 / tanH;     // distance at which the open spread (plus a margin) fits across
+  frame.dist = Math.max(D, need); frame.fov = camera.fov;
+}
+// camera settings: distance (as a multiple of the auto framing), tilt from straight down, orbit around the table,
+// the point it looks at, an optional lens override, and how far the pointer moves it (true 3D parallax, in metres)
+const CAM = { zoom: 1, tilt: 33, orbit: -14.5, panX: 0, panZ: 0, fov: 0, parallax: 0.025 };   // chosen with the camera panel
+const _t = new THREE.Vector3(), _r = new THREE.Vector3(), _u = new THREE.Vector3();
+// the finale: the camera dives into the Dominion printed on the last page, the screen fades, and the street page takes over
+const NEXT = 'street.html#from-book';
+const zoom = { t: -1, from: new THREE.Vector3(), look: new THREE.Vector3(), to: new THREE.Vector3(), target: new THREE.Vector3() };
+function startZoom() {
+  if (zoom.t >= 0) return;
+  const uv = PAGES[PAGES.length - 1].plateUV || { x: 0.5, y: 0.66 };
+  // the last page lies on the right-hand page block: x runs out from the spine, page-top is the far edge
+  zoom.target.set(book.position.x - W / 2 + 0.0015 + uv.x * PW, tb + tp / 2 + 0.004, book.position.z - PH / 2 + uv.y * PH);
+  zoom.from.copy(camera.position); zoom.look.set(CAM.panX, 0, CAM.panZ);
+  zoom.to.copy(zoom.target).add(new THREE.Vector3(0, 0.035, 0.012));
+  zoom.t = 0; zoom.t0 = performance.now(); hint.classList.add('off'); skip.classList.add('off');
+  setTimeout(() => document.getElementById('fade').classList.add('on'), 750);
+  setTimeout(() => { location.href = NEXT; }, 1350);
+}
+const _zl = new THREE.Vector3();
+function placeCamera() {
+  if (zoom.t >= 0) {
+    // one smooth curve for both the move and the aim (no kinks), easing in and settling into the page
+    const x = Math.min(1, zoom.t / 1.4), k = x * x * x * (x * (x * 6 - 15) + 10);
+    camera.position.lerpVectors(zoom.from, zoom.to, k);
+    camera.lookAt(_zl.lerpVectors(zoom.look, zoom.target, THREE.MathUtils.smootherstep(x, 0, 0.8)));
+    return;
+  }
+  const co = THREE.MathUtils.smootherstep(camOpen, 0.0, 0.47);           // eases across with the cover as it swings open
+  const auto = frame.fov || PHOTO.fov, fov = CAM.fov || auto;
+  if (camera.fov !== fov) { camera.fov = fov; camera.updateProjectionMatrix(); }
+  // a lens override dollies to keep the same framing
+  const d = (frame.dist || D) * CAM.zoom * THREE.MathUtils.lerp(0.86, 1, co) * Math.tan(THREE.MathUtils.degToRad(auto / 2)) / Math.tan(THREE.MathUtils.degToRad(fov / 2));
+  const th = THREE.MathUtils.degToRad(CAM.tilt), yaw = THREE.MathUtils.degToRad(CAM.orbit);
+  _t.set(CAM.panX + SLIDE * (1 - co), 0, CAM.panZ);
+  camera.position.set(_t.x + Math.sin(yaw) * Math.sin(th) * d, d * Math.cos(th), _t.z + Math.cos(yaw) * Math.sin(th) * d);
+  camera.lookAt(_t); camera.updateMatrixWorld();
+  // pointer parallax: slide the camera across its own image plane, keep looking at the same spot
+  _r.setFromMatrixColumn(camera.matrixWorld, 0); _u.setFromMatrixColumn(camera.matrixWorld, 1);
+  camera.position.addScaledVector(_r, ptr.sx * CAM.parallax).addScaledVector(_u, -ptr.sy * CAM.parallax);
+  camera.lookAt(_t);
+}
+// ---------- lighting: key light direction & strength, room fill, reflections (what the gold lettering mirrors) ----------
+// key light direction: azimuth measured round the table from the viewer's side (0° = from the front, 90° = from the right),
+// elevation above the table. LIGHT is what the tuning panel edits.
+const LIGHT = { az: -180, el: 67, key: 1.05, fill: 0.62, gold: 0.55, envRot: 0 };   // chosen with the lighting panel: light from straight behind the book
+const roomEnv = new RoomEnvironment();
+let envRT = null, envBusy = false;
+function applyLight() {
+  const az = THREE.MathUtils.degToRad(LIGHT.az), el = THREE.MathUtils.degToRad(LIGHT.el), r = 1.1;
+  key.position.set(BOOK_CENTER.x + Math.sin(az) * Math.cos(el) * r, Math.sin(el) * r, BOOK_CENTER.z + Math.cos(az) * Math.cos(el) * r);
+  key.intensity = LIGHT.key; hemi.intensity = LIGHT.fill; mCover.envMapIntensity = LIGHT.gold;
+}
+function applyEnv() {            // turn the reflected room around the book (rebuilt at most once a frame)
+  if (envBusy) return; envBusy = true;
+  requestAnimationFrame(() => {
+    envBusy = false; roomEnv.rotation.y = THREE.MathUtils.degToRad(LIGHT.envRot);
+    const rt = pmrem.fromScene(roomEnv, 0.04); scene.environment = rt.texture; if (envRT) envRT.dispose(); envRT = rt;
+  });
+}
+applyLight();
+addEventListener('resize', frame);
+addEventListener('pointermove', e => { if (e.pointerType === 'touch') return; ptr.x = (e.clientX / innerWidth) * 2 - 1; ptr.y = (e.clientY / innerHeight) * 2 - 1; });
+
+// ---------- interaction ----------
+const hint = document.getElementById('hint');
+const picker = new THREE.Raycaster(), ndc = new THREE.Vector2();
+const overBook = (e) => { ndc.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); picker.setFromCamera(ndc, camera); return picker.intersectObject(book, true).length > 0; };
+function toggle() { seqGoal = seqGoal ? 0 : SEQ.end; hint.textContent = seqGoal ? 'Close the book' : 'Open the book'; }
+// click anywhere: hurry to the next page (or straight into the theatre on the last one)
+let rush = 0;
+function advance() {
+  if (zoom.t >= 0) return;
+  if (seqT >= SEQ.end - 1e-3) { startZoom(); return; }
+  if (!seqGoal) { seqGoal = SEQ.end; hint.textContent = 'Close the book'; }
+  const t0 = SEQ.cover + SEQ.hold, per = SEQ.flip + SEQ.read;
+  if (seqT < SEQ.cover) { rush = SEQ.cover; return; }                          // still opening: finish it quickly
+  if (seqT < t0) { seqT = t0; poseAt(seqT); return; }                          // holding on the cover spread
+  const k = Math.floor((seqT - t0) / per), inFlip = (seqT - t0) - k * per < SEQ.flip;
+  if (inFlip) { rush = t0 + k * per + SEQ.flip; return; }                       // mid turn: finish it quickly
+  seqT = Math.min(SEQ.end, t0 + (k + 1) * per); poseAt(seqT); rush = Math.min(SEQ.end, seqT + SEQ.flip);   // reading: turn now, fast
+}
+renderer.domElement.addEventListener('click', advance);
+renderer.domElement.addEventListener('pointermove', e => document.body.classList.toggle('over-book', overBook(e)));
+hint.addEventListener('click', toggle);
+// skip: straight to the finale spread (where the move into the landing page will start); it bows out once you are there
+const skip = document.getElementById('skip');
+skip.addEventListener('click', () => { seqT = seqGoal = SEQ.end; poseAt(seqT); hint.textContent = 'Close the book'; setTimeout(startZoom, 150); });
+window.__book = { set: v => { seqT = seqGoal = v * SEQ.end; poseAt(seqT); }, seek: t => { seqT = seqGoal = t; poseAt(t); }, toggle, get: () => seqT / SEQ.end };
+
+// ---------- go ----------
+new THREE.ImageLoader().load(ASSET['height_flat.png'], img => {   // the table is bare now: flat
+  buildTable(img); frame();
+  let revealed = false;
+  const reveal = () => { if (revealed) return; revealed = true; document.getElementById('veil').classList.add('off'); setTimeout(() => { skip.classList.remove('off'); }, 900); window.__ready = true;
+    setTimeout(() => { if (!seqGoal && zoom.t < 0) toggle(); }, 2000); };   // a moment on the cover first
+  THREE.DefaultLoadingManager.onLoad = reveal; setTimeout(reveal, 4000);
+});
+let last = performance.now(), autoHold = 0;
+renderer.setAnimationLoop(now => {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  ptr.sx += (ptr.x - ptr.sx) * Math.min(1, dt * 2.5); ptr.sy += (ptr.y - ptr.sy) * Math.min(1, dt * 2.5);
+  if (seqT !== seqGoal) { const dir = Math.sign(seqGoal - seqT); seqT += dir * dt * (dir > 0 ? (seqT < rush ? 3.5 : 1) : SEQ.rewind); seqT = Math.min(SEQ.end, Math.max(0, seqT)); if (Math.abs(seqT - seqGoal) < 1e-3 || Math.sign(seqGoal - seqT) !== dir) seqT = seqGoal; poseAt(seqT); }
+  candle.intensity = 0 * (0.85 + 0.15 * Math.sin(now * 0.011) * Math.sin(now * 0.0037 + 1.3));
+  if (zoom.t >= 0) zoom.t = (performance.now() - zoom.t0) / 1000;   // wall clock, so the dive stays in step with the fade and hand-off
+  else if (seqGoal === SEQ.end && seqT >= SEQ.end) { autoHold += dt; if (autoHold > 3.0) startZoom(); }   // hold 3s on the last page before the dive
+  placeCamera(); renderer.render(scene, camera);
+});
+</script>
+
+</body></html>

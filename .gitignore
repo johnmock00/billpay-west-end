@@ -1,0 +1,9 @@
+# Vercel link (local only)
+.vercel
+# working files that aren't part of the site
+Backup/
+Textures/
+West End/
+_src/
+.DS_Store
+setup_github.sh

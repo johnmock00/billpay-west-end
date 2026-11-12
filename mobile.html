@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Bill Pay: The West End Musical</title>
+<meta name="description" content="Ramp's Bill Pay: The Musical comes to the West End. One night only at the Dominion Theatre, 14 December 2026.">
+<meta name="theme-color" content="#1a0626">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=DM+Sans:wght@400;500;600&display=swap">
+<link rel="preload" as="image" href="assets/logo.webp">
+<style>
+  :root { --ink: #f6eedd; --dim: rgba(246,238,221,.74); --gold: #e7b860; --bulb: #ffd98a;
+    --serif: "Cormorant Garamond", Georgia, serif; --display: "Cinzel", Georgia, serif; --body: "DM Sans", system-ui, -apple-system, sans-serif; color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: #1a0626; color: var(--ink); font-family: var(--body); line-height: 1.5; }
+  /* the theatre's purple curtains at the top of the page, scrolling with it and fading into deep purple */
+  .curtain { position: absolute; top: 0; left: 0; right: 0; height: max(118svh, 980px); z-index: -1; background: url(assets/curtains.webp) center top / cover no-repeat; }
+  .curtain::after { content: ""; position: absolute; inset: 0;
+    background: radial-gradient(90% 45% at 50% 28%, rgba(26,6,38,0) 0%, rgba(26,6,38,.3) 60%, rgba(26,6,38,.75) 100%), linear-gradient(180deg, rgba(26,6,38,0) 35%, rgba(26,6,38,.7) 70%, #1a0626 100%); }
+  body { position: relative; }
+  img { display: block; max-width: 100%; height: auto; }
+  main { max-width: 520px; margin: 0 auto; padding: 0 20px calc(30px + env(safe-area-inset-bottom)); }
+
+  /* above the fold: logo, then straight to the button */
+  .hero { min-height: 100svh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; position: relative;
+    padding: calc(24px + env(safe-area-inset-top)) 0 56px; gap: 0; }
+  .logo { width: min(78vw, 340px); filter: drop-shadow(0 10px 30px rgba(0,0,0,.45)); }
+  /* the date and place: one rounded panel split by hairlines (no gaps or per-tile blur, so the corners stay clean) */
+  .when { display: grid; grid-template-columns: auto auto;   /* each column gets its content plus an equal share of the spare room */ width: 100%; margin: 20px 0; border-radius: 12px; overflow: hidden;
+    background: rgba(22,6,30,.84); border: 1px solid rgba(231,184,96,.32); box-shadow: 0 10px 30px rgba(0,0,0,.35);
+    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); isolation: isolate; }
+  .when div { padding: 13px 14px 12px; display: flex; flex-direction: column; justify-content: center; gap: 3px; }
+  .when div:first-child { border-right: 1px solid rgba(231,184,96,.22); }
+  .when .wide { grid-column: 1 / -1; border-top: 1px solid rgba(231,184,96,.22); }
+  .when b { display: block; font: 600 15px/1.2 var(--display); letter-spacing: .03em; color: var(--ink); }
+  .when span { display: block; font-size: 12.5px; line-height: 1.35; color: var(--dim); white-space: nowrap; }
+
+  /* the landing page's button: gold gradient, engraved small-cap lettering */
+  .rsvp-cta { display: block; width: min(368px, 100%); height: 48px; margin: 0 auto; padding: 0 20px; border: 0; border-radius: 6px; cursor: pointer;
+    background-image: linear-gradient(97.7deg, #f4d290 0%, #efc77d 20%, #e5b85e 46%, #eec88a 56%, #f9e0af 61%, #fcd38a 66%, #fbc351 73%, #fcc452 100%);
+    box-shadow: 0 8px 28px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.35);
+    font: 700 17px/20px "Cinzel", Georgia, serif; letter-spacing: .64px; text-transform: lowercase; font-feature-settings: "ss01" 1; transition: filter .2s, transform .2s; }
+  .rsvp-cta span { display: inline-block; color: transparent; -webkit-text-fill-color: transparent;
+    background: linear-gradient(180deg, #7a4d00 0%, #925f00 45%, #b47800 100%); -webkit-background-clip: text; background-clip: text;
+    position: relative; top: 1px; filter: drop-shadow(0 1px 0 rgba(255, 244, 214, .45)); }
+  @supports not ((-webkit-background-clip: text) or (background-clip: text)) { .rsvp-cta span { color: #8a5a00; -webkit-text-fill-color: #8a5a00; background: none; } }
+  .rsvp-cta:active { transform: translateY(1px); }
+  .watch { display: inline-flex; align-items: center; gap: 8px; margin: 12px auto 0; padding: 10px 14px; background: none; border: 0; cursor: pointer;
+    color: var(--ink); font: 500 15px var(--body); text-decoration: underline; text-decoration-color: rgba(246,238,221,.45); text-underline-offset: 4px; text-shadow: 0 1px 8px rgba(0,0,0,.6); }
+  .watch svg { width: 22px; height: 22px; flex: none; }
+  .rsvp-cta:focus-visible, .watch:focus-visible, .close:focus-visible { outline: 2px solid var(--bulb); outline-offset: 3px; }
+  .cue { position: absolute; left: 0; right: 0; bottom: calc(14px + env(safe-area-inset-bottom)); margin: 0; font: 500 11px var(--body); letter-spacing: .2em; text-transform: uppercase; color: var(--dim); }
+
+  /* last time: the photos in one scattered group, then the story in one go */
+  .story { padding: 36px 0 10px; }
+  .pile { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin: 0 -4px 52px; }
+  .snap { background: #efe5d3; padding: 5px 5px 18px; box-shadow: 0 10px 22px rgba(0,0,0,.55); }
+  .snap img { aspect-ratio: 1; object-fit: cover; width: 100%; }
+  .pile .snap:nth-child(1) { transform: rotate(-5deg) translate(4px, 6px); }
+  .pile .snap:nth-child(2) { transform: rotate(3deg) translateY(-4px); z-index: 2; }
+  .pile .snap:nth-child(3) { transform: rotate(-2deg) translate(-4px, 8px); }
+  .pile .snap:nth-child(4) { transform: rotate(4deg) translate(6px, -6px); z-index: 2; }
+  .pile .snap:nth-child(5) { transform: rotate(-3deg) translateY(-2px); }
+  .pile .snap:nth-child(6) { transform: rotate(5deg) translate(-6px, -8px); z-index: 2; }
+  .tale { text-align: center; }
+  .tale p { font: 400 19px/1.6 var(--body); color: var(--dim); margin: 0 0 26px; text-wrap: pretty; }
+  .tale p.big { font: 600 30px/1.2 var(--display); letter-spacing: .02em; color: var(--bulb); margin: 6px 0 24px; text-shadow: 0 0 22px rgba(255,200,110,.25); }
+  .tale strong { font-weight: 600; color: var(--ink); }
+  .tale p.sub { font-size: 16px; line-height: 1.5; margin: -16px 0 32px; }
+  .stats { display: grid; grid-template-columns: auto auto auto; justify-content: space-between; gap: 10px; margin: 4px 0 24px; padding: 16px 4px;
+    border-top: 1px solid rgba(231,184,96,.25); border-bottom: 1px solid rgba(231,184,96,.25); }
+  .stats b { display: block; font: 700 20px/1.1 var(--display); color: var(--bulb); white-space: nowrap; }
+  .stats span { display: block; margin-top: 5px; font-size: 12px; line-height: 1.3; color: var(--dim); }
+  .dom { margin: 18px -8px 36px; }
+  .dom img { width: 100%; filter: drop-shadow(0 14px 30px rgba(0,0,0,.45)); }
+  .again { text-align: center; padding: 8px 0 10px; }
+  .again p { font: 600 20px/1.25 var(--display); letter-spacing: .04em; margin: 0 0 16px; text-shadow: 0 2px 10px rgba(0,0,0,.6); }
+  footer { margin-top: 44px; display: flex; align-items: center; justify-content: center; gap: 18px; font-size: 13px; }
+  footer a { text-decoration: none; color: var(--dim); }
+  footer svg { width: 18px; height: 18px; display: block; }
+  .full { display: block; text-align: center; margin-top: 14px; font-size: 12px; color: rgba(246,238,221,.45); }
+
+  /* sheets: Luma registration and the video */
+  .sheet { position: fixed; inset: 0; z-index: 10; background: rgba(8,2,12,.9); display: flex; flex-direction: column;
+    padding: calc(10px + env(safe-area-inset-top)) 10px calc(10px + env(safe-area-inset-bottom)); opacity: 0; transition: opacity .2s; }
+  .sheet.open { opacity: 1; }
+  .sheet[hidden] { display: none; }
+  .bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 4px 10px; }
+  .bar a { font-size: 12.5px; color: var(--dim); }
+  .close { width: 40px; height: 40px; border-radius: 999px; border: 1px solid rgba(246,238,221,.35); background: rgba(0,0,0,.4); color: var(--ink); font-size: 24px; line-height: 1; cursor: pointer; }
+  .sheet .frame { flex: 1; border-radius: 12px; overflow: hidden; background: #fff; }
+  .sheet iframe { width: 100%; height: 100%; border: 0; display: block; }
+  .sheet video { width: 100%; max-height: 100%; margin: auto; display: block; background: #000; border-radius: 8px; }
+  #vidSheet .frame { background: transparent; display: flex; }
+  @media (prefers-reduced-motion: reduce) { .sheet { transition: none; } }
+</style>
+</head>
+<body>
+<div class="curtain" aria-hidden="true"></div>
+<main>
+  <section class="hero">
+    <img class="logo" src="assets/logo.webp" alt="Ramp presents Bill Pay: The West End Musical!" width="892" height="1000">
+    <div class="when">
+      <div><b>14 December</b><span>2026</span></div>
+      <div><b>One night only</b><span>Doors 6:30 &middot; curtain 7:30pm</span></div>
+      <div class="wide"><b>Dominion Theatre</b><span>Tottenham Court Road, London</span></div>
+    </div>
+    <button class="rsvp-cta" type="button" data-rsvp><span>Request your seat</span></button>
+    <button class="watch" type="button" data-video><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M10 8l6 4-6 4z" fill="currentColor"/></svg>Watch the video</button>
+    <p class="cue">Learn more &darr;</p>
+  </section>
+
+  <section class="story" aria-label="The story so far">
+    <div class="pile">
+      <div class="snap"><img src="book/cast_film.webp" alt="The cast on stage under the Bill Pay sign in New York" loading="lazy"></div>
+      <div class="snap"><img src="book/stage_film.webp" alt="The ensemble mid-number" loading="lazy"></div>
+      <div class="snap"><img src="book/crowd_film.webp" alt="A snapshot from the night in New York" loading="lazy"></div>
+      <div class="snap"><img src="book/tophat_film.webp" alt="A snapshot from the night in New York" loading="lazy"></div>
+      <div class="snap"><img src="book/diva_film.webp" alt="A snapshot from the night in New York" loading="lazy"></div>
+      <div class="snap"><img src="book/audience_film.webp" alt="A snapshot from the night in New York" loading="lazy"></div>
+    </div>
+    <div class="tale">
+      <p>Ramp first staged <strong>Bill Pay: The Musical</strong> in New York for one night, starring <strong>Billy Porter</strong>, <strong>Billy Zane</strong> and <strong>Jessica Vosk</strong>.</p>
+      <p>The show sold out, <strong>5,000 more people</strong> requested a seat, and <strong>50,000,000</strong> have watched it online since.</p>
+      <p>Now the show is coming to London for one night at the <strong>Dominion Theatre</strong>, starring <strong>Hannah Waddingham</strong>, <strong>Marisha Wallace</strong>, <strong>Rachel Tucker</strong> and <strong>Alan Carr</strong>.</p>
+      <div class="dom"><img src="book/dominion_story.webp" alt="Illustration of the Dominion Theatre with Bill Pay on its billboard" loading="lazy"></div>
+      <p class="big">14 December 2026</p>
+      <p class="sub">Dominion Theatre, Tottenham Court Road<br>Doors 6:30pm &middot; curtain 7:30pm</p>
+    </div>
+  </section>
+
+  <section class="again">
+    <button class="rsvp-cta" type="button" data-rsvp><span>Request your seat</span></button>
+    <button class="watch" type="button" data-video><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M10 8l6 4-6 4z" fill="currentColor"/></svg>Watch the video</button>
+  </section>
+
+  <footer>
+    <a href="https://ramp.com" target="_blank" rel="noopener">What is Ramp?</a>
+    <a href="https://x.com/tryramp" target="_blank" rel="noopener" aria-label="Ramp on X"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M17.8 3h3.1l-6.8 7.8L22 21h-6.2l-4.9-6.4L5.3 21H2.2l7.3-8.3L1.8 3h6.4l4.4 5.8L17.8 3Zm-1.1 16.2h1.7L7.4 4.7H5.6l11.1 14.5Z"/></svg></a>
+    <a href="https://www.linkedin.com/company/ramp" target="_blank" rel="noopener" aria-label="Ramp on LinkedIn"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5ZM3 9.75h4V21H3V9.75Zm6.5 0h3.8v1.6h.1c.5-1 1.8-2 3.8-2 4 0 4.8 2.6 4.8 6V21h-4v-5c0-1.2 0-2.8-1.7-2.8s-2 1.3-2 2.7V21h-4V9.75Z"/></svg></a>
+    <a href="https://www.facebook.com/rampcard" target="_blank" rel="noopener" aria-label="Ramp on Facebook"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13.5 21v-7.5h2.6l.4-3h-3V8.6c0-.9.3-1.5 1.5-1.5h1.6V4.4c-.3 0-1.2-.1-2.3-.1-2.3 0-3.9 1.4-3.9 4v2.2H7.8v3h2.6V21h3.1Z"/></svg></a>
+  </footer>
+  <a class="full" href="index.html?full=1">View the full experience</a>
+</main>
+
+<div class="sheet" id="rsvpSheet" hidden role="dialog" aria-modal="true" aria-label="Request your seat">
+  <div class="bar"><a href="https://luma.com/bnhzs0ay" target="_blank" rel="noopener">Open on Luma &#8599;</a><button class="close" type="button" aria-label="Close">&times;</button></div>
+  <div class="frame"></div>
+</div>
+<div class="sheet" id="vidSheet" hidden role="dialog" aria-modal="true" aria-label="Bill Pay: The Musical video">
+  <div class="bar"><span></span><button class="close" type="button" aria-label="Close">&times;</button></div>
+  <div class="frame"></div>
+</div>
+
+<script>
+const LUMA_EMBED = "https://luma.com/embed/event/evt-JCh11RBiiWkF4wu/simple";
+const VIDEO_URL = "https://player.vimeo.com/progressive_redirect/playback/1243883067/rendition/720p/file.mp4%20%28720p%29.mp4?loc=external&log_user=0&signature=5d7b23133858bc78790721849a88c191932a6dee53dcd84e6133d43a7bc89e9c";
+let lastFocus = null;
+function open(sheet, fill) {
+  const frame = sheet.querySelector('.frame');
+  if (!frame.firstChild) fill(frame);
+  lastFocus = document.activeElement; sheet.hidden = false; document.body.style.overflow = 'hidden';
+  requestAnimationFrame(() => sheet.classList.add('open')); sheet.querySelector('.close').focus();
+}
+function shut(sheet) {
+  sheet.classList.remove('open'); document.body.style.overflow = '';
+  const v = sheet.querySelector('video'); if (v) v.pause();
+  setTimeout(() => { sheet.hidden = true; }, 200); if (lastFocus) lastFocus.focus({ preventScroll: true });
+}
+const rsvp = document.getElementById('rsvpSheet'), vid = document.getElementById('vidSheet');
+document.querySelectorAll('[data-rsvp]').forEach(b => b.addEventListener('click', () => open(rsvp, f => {
+  const i = document.createElement('iframe'); i.src = LUMA_EMBED; i.title = 'Request your seat: Bill Pay, The West End Musical (Luma registration)'; i.allow = 'fullscreen'; f.appendChild(i);
+})));
+document.querySelectorAll('[data-video]').forEach(b => b.addEventListener('click', () => {
+  open(vid, f => { const v = document.createElement('video'); Object.assign(v, { src: VIDEO_URL, controls: true, playsInline: true, poster: 'assets/video_poster.webp', preload: 'metadata' }); f.appendChild(v); });
+  const v = vid.querySelector('video'); v.play().catch(() => {});
+}));
+for (const s of [rsvp, vid]) {
+  s.querySelector('.close').addEventListener('click', () => shut(s));
+  s.addEventListener('click', e => { if (e.target === s) shut(s); });
+}
+addEventListener('keydown', e => { if (e.key === 'Escape') for (const s of [rsvp, vid]) if (!s.hidden) shut(s); });
+</script>
+</body>
+</html>
