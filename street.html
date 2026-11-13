@@ -8,7 +8,7 @@
 <title>Dominion Theatre Relief</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+SC:wght@500;600&family=IBM+Plex+Sans+Condensed:wght@400;500&family=Cinzel:wght@400;600;700&family=DM+Sans:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+SC:wght@500;600&family=IBM+Plex+Sans+Condensed:wght@400;500&family=Cinzel:wght@400;600;700&family=DM+Sans:wght@400;500&family=Lora:wght@400;500&display=swap">
 <style>
   /* Layout: full-bleed WebGL stage, title top-left. Single dark look (night scene). */
   :root {
@@ -242,6 +242,12 @@ body.on-hot #ret-dot { background: var(--bulb); }
 .rsvp-head.swapping { opacity: 0; }
 .rsvp-head.hot { transform: scale(1.1); }
 .rsvp-head.hot .rsvp-pitch { color: #fff7e2; }
+/* event details above the button: three centred lines in Lora, sized to fit the panel on any screen */
+.rsvp-head { font-size: clamp(15px, 5vw, 24px); }
+.rsvp-pitch { font: 400 1em/1.25 "Lora", Georgia, serif !important; color: #fbf3e4; letter-spacing: 0;
+  text-shadow: 0 1px 12px rgba(0,0,0,.85), 0 0 2px rgba(0,0,0,.9) !important; }
+.rsvp-sub { margin: .3em 0 0; font: 400 .875em/1.25 "Lora", Georgia, serif; color: #fbf3e4; letter-spacing: 0; }
+.rsvp-gift { margin: .45em 0 0; font: 400 .84em/1.25 "Lora", Georgia, serif; color: #e8c46c; }
 #ret-label { left: 0; top: 0; padding: 7px 12px 7px 10px; margin: 0; white-space: nowrap; transform-origin: 0 0;
   display: inline-flex; align-items: center; gap: 7px; font: 500 12px var(--font-body); color: var(--ink);
   background: rgba(11, 10, 20, 0.7); border: 1px solid rgba(255, 217, 138, 0.35); border-radius: 999px;
@@ -368,8 +374,9 @@ body.cur-rsvp #ret-label .spk { display: none; }
 <div class="rsvp" id="rsvp" aria-labelledby="rsvpPitch">
   
   <div class="rsvp-head">
-    <p class="rsvp-pitch" id="rsvpPitch">A Christmas do for finance pros like you.</p>
-    <p class="rsvp-sub" id="rsvpSub">Ramp's Bill Pay: The Musical comes to the West End. 14 December 2026, Dominion Theatre. Doors 6:30pm, curtain 7:30pm.</p>
+    <p class="rsvp-pitch" id="rsvpPitch">14 December 2026 · Dominion Theatre</p>
+    <p class="rsvp-sub" id="rsvpSub">Doors 6:30pm · Curtain 7:30pm</p>
+    <p class="rsvp-gift">Tickets are on us.</p>
   </div>
   <div class="rsvp-cta-wrap">
     <button type="button" class="rsvp-cta" id="rsvpGo"><span>Request your seat</span></button>
@@ -1349,14 +1356,7 @@ let swapTimer = null;
 function setHot(h) {
   if (h === hotState.cur) return;
   hotState.cur = h; document.body.classList.toggle('on-hot', !!h); updateCursor();
-  const busy = !document.getElementById('luma').hidden;
-  const c = (h && !busy) ? h : HEAD_DEFAULT;
-  if (rsvpPitch.textContent === c.title && !(h && !busy) === !rsvpHead.classList.contains('hot')) return;
-  clearTimeout(swapTimer); rsvpHead.classList.add('swapping');
-  swapTimer = setTimeout(() => {
-    rsvpPitch.textContent = c.title; rsvpSub.textContent = c.text;
-    rsvpHead.classList.toggle('hot', c !== HEAD_DEFAULT); rsvpHead.classList.remove('swapping');
-  }, 170);
+  // the event details above the button stay fixed; hovering an object no longer swaps in a description of it
 }
 const isUI = t => t.closest && t.closest('.rsvp, .vid, .snd-btn, .cam-panel, .foot-links, .luma');
 addEventListener('pointermove', e => {
@@ -1741,7 +1741,9 @@ function tune(m) {
   if (['bus_black', 'bus_black_plastic_blurred', 'bus_black_plastic_glossy'].includes(n)) { m.polygonOffset = true; m.polygonOffsetFactor = -1; m.polygonOffsetUnits = n === 'bus_black_plastic_blurred' ? -8 : -4; }
   if (n === 'shoe_lacquer') { m.color.set('#a3000c'); m.roughness = 0.18; m.emissive = new THREE.Color('#3a0004'); m.envMapIntensity = 1.3; }
   if (n === 'shoe_sole') { m.emissive = new THREE.Color('#180002'); }
-  if (n === 'bus_carpaint' || n === 'bus_decals') { m.envMapIntensity = 1.2; m.roughness = 0.28; m.color.multiplyScalar(0.6); }   // night-lit paint (darker), glossy reflections as before
+  if (n === 'bus_carpaint' || n === 'bus_decals') { m.envMapIntensity = 1.2; m.roughness = 0.28; m.color.multiplyScalar(0.6); }
+  // body paint: tint the livery so the unwrapped panels (roof band, ends, far side) match the wrap's deep purple under the street's warm light
+  if (n === 'bus_carpaint') m.color.setRGB(0.54, 0.33, 0.68);   // night-lit paint (darker), glossy reflections as before
   if (n === 'bus_glass_windows') { m.transparent = false; m.color.set('#050608'); m.metalness = 0.1; m.roughness = 0.03; m.envMapIntensity = 2.6; m.emissive = new THREE.Color('#120e09'); busWrap(m, true); }   // reflects the lit theatre   // saloon removed: tinted glass with a warm glow
   if (n === 'bus_register_plate') { m.polygonOffset = true; m.polygonOffsetFactor = -4; m.polygonOffsetUnits = -4; }
   if (n === 'bus_interior') { m.emissive = new THREE.Color('#6a5c46'); m.color.set('#5a5048'); }
