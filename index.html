@@ -205,11 +205,11 @@ const candle = new THREE.PointLight(0xffa64d, 0, 0.9, 2);   // off: the candle h
 // three spreads: the story on the left, pictures on the right, the finale last
 // a picture's src can be a file in assets/ (e.g. 'stage.jpg'); while it is null, a framed space holds its place
 const STORY = [
-  { layout: 'book/layout_p1.webp', text: "Once upon a time, Ramp put on a musical in New York, for one night only." },   // illuminated page art
+  { layout: 'book/layout_p1.webp', text: "Once upon a time, Ramp put on a musical on Broadway, for one night only." },   // illuminated page art
   { polaroids: ['cast_film.jpg', 'stage_film.jpg'], frame: true },   // two snapshots, laid on the page like polaroids   // photos are pre-printed in the title's red, cropped and faded at the edges like the Dominion
   { layout: 'book/layout_p3.webp', text: "Every seat taken. Five thousand waiting. Fifty million watching, wishing they were there." },
   { polaroids: ['crowd_film.jpg', 'tophat_film.jpg', 'diva_film.jpg', 'audience_film.jpg'], frame: true },
-  { layout: 'book/layout_p5.webp', text: "Now Ramp has made London its home, and the curtain rises again." },
+  { layout: 'book/layout_p5.webp', text: "Now Ramp has launched in London, and the curtain rises again." },
   { layout: 'book/layout_p6.webp', zoom: [1088 / 2172, 1470 / 2652] }   // "One More Night Only." over the Dominion illustration; the dive ends on its billboard   // the Dominion, printed in the title's red: where the zoom into the landing page will begin,
 ];
 // ink is chosen before the pages' warm tint is applied, so it lands as dark brown and theatre red on screen
