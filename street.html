@@ -414,12 +414,33 @@ const LUMA_EMBED = "https://luma.com/embed/event/evt-JCh11RBiiWkF4wu/simple";
     frame.appendChild(f);
   };
   let last = null;
-  window.openRSVP = () => {
+  const openFrame = () => {
     ensure(); last = document.activeElement; dlg.hidden = false;
     requestAnimationFrame(() => dlg.classList.add("open")); close.focus();
   };
+  // Luma's checkout overlay opens straight on the registration fields ("Request to join" already pressed).
+  // It's driven by a trigger outside the RSVP panel; if Luma's script hasn't loaded, the embedded event page is the fallback.
+  const EVENT_ID = LUMA_EMBED.match(/evt-[A-Za-z0-9]+/)[0];
+  const trigger = document.createElement("button");
+  Object.assign(trigger, { type: "button", tabIndex: -1, textContent: "Request your seat" });
+  trigger.setAttribute("data-luma-action", "checkout"); trigger.setAttribute("data-luma-event-id", EVENT_ID); trigger.setAttribute("aria-hidden", "true");
+  trigger.style.cssText = "position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0;pointer-events:none";
+  document.body.appendChild(trigger);
+  let lumaState = "idle";   // idle | loading | ready | failed
+  const loadLuma = () => {
+    if (lumaState !== "idle") return; lumaState = "loading";
+    const sc = document.createElement("script"); sc.id = "luma-checkout"; sc.src = "https://embed.lu.ma/checkout-button.js"; sc.async = true;
+    sc.onload = () => { try { window.luma && window.luma.initCheckout && window.luma.initCheckout(); } catch (e) {} lumaState = window.luma ? "ready" : "failed"; };
+    sc.onerror = () => { lumaState = "failed"; };
+    document.head.appendChild(sc);
+  };
+  window.openRSVP = () => { if (lumaState === "ready") trigger.click(); else { loadLuma(); openFrame(); } };
+  // fetch Luma's script once the street is up and the browser is idle, so it never competes with the scene
+  const warm = () => { if (!window.__ready) return setTimeout(warm, 1000); setTimeout(() => window.requestIdleCallback ? requestIdleCallback(loadLuma, { timeout: 3000 }) : loadLuma(), 1500); };
+  warm();
   const shut = () => { dlg.classList.remove("open"); setTimeout(() => { dlg.hidden = true; }, 220); if (last && last.focus) last.focus({ preventScroll: true }); };
   go.addEventListener("click", window.openRSVP);
+  go.addEventListener("pointerenter", loadLuma, { once: true });
   go.addEventListener("pointerenter", () => { if (!document.querySelector('link[href="https://luma.com"]')) { const l = document.createElement("link"); l.rel = "preconnect"; l.href = "https://luma.com"; document.head.appendChild(l); } }, { once: true });
   close.addEventListener("click", shut);
   dlg.addEventListener("click", e => { if (e.target === dlg) shut(); });
