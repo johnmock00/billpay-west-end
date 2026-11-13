@@ -1,6 +1,8 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><script>/* phones get the static mobile page; tablets and desktops get the 3D experience (?full=1 forces it) */(function(){try{if(/[?&]full=1/.test(location.search)){try{sessionStorage.setItem('bpFull','1')}catch(e){}return}try{if(sessionStorage.getItem('bpFull'))return}catch(e){}var ua=navigator.userAgent||'',tablet=/iPad|Tablet|Silk|Kindle|PlayBook/i.test(ua)||(/Android/i.test(ua)&&!/Mobile/i.test(ua))||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1),phone=/iPhone|iPod|Android.*Mobile|Windows Phone|BlackBerry|Opera Mini|IEMobile/i.test(ua),small=Math.min(screen.width,screen.height)<600&&matchMedia('(pointer:coarse)').matches;if(!tablet&&(phone||small))location.replace('mobile.html')}catch(e){}})();</script>
 <link rel="preload" href="assets/scene.glb" as="fetch" crossorigin>
+<!-- start the libraries and the model's textures alongside the model, instead of one after another -->
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" crossorigin><link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js" crossorigin><link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/utils/BufferGeometryUtils.js" crossorigin><link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/meshopt_decoder.module.js" crossorigin><link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/RGBELoader.js" crossorigin><link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/objects/Reflector.js" crossorigin><link rel="preload" href="assets/facade.webp" as="fetch" crossorigin><link rel="preload" href="assets/stone.webp" as="fetch" crossorigin><link rel="preload" href="assets/soffit.webp" as="fetch" crossorigin><link rel="preload" href="assets/roof.webp" as="fetch" crossorigin><link rel="preload" href="assets/elevation.webp" as="fetch" crossorigin><link rel="preload" href="assets/letters.webp" as="fetch" crossorigin><link rel="preload" href="assets/gift_tag.webp" as="fetch" crossorigin><link rel="preload" href="assets/kiosk.webp" as="fetch" crossorigin><link rel="preload" href="assets/corner.webp" as="fetch" crossorigin><link rel="preload" href="assets/hotel_tower.webp" as="fetch" crossorigin><link rel="preload" href="assets/hotel_podium.webp" as="fetch" crossorigin><link rel="preload" href="assets/glass_office.webp" as="fetch" crossorigin><link rel="preload" href="assets/far_stone.webp" as="fetch" crossorigin><link rel="preload" href="assets/bus_logo.webp" as="fetch" crossorigin><link rel="preload" href="assets/bus_decals.webp" as="fetch" crossorigin><link rel="preload" href="assets/bus_plate.webp" as="fetch" crossorigin><link rel="preload" href="assets/bus_sidewall.webp" as="fetch" crossorigin><link rel="preload" href="assets/bus_tread.webp" as="fetch" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 </head><body>
 <title>Dominion Theatre Relief</title>
@@ -317,6 +319,7 @@ body.cur-rsvp #ret-label .spk { display: none; }
   const gate = document.getElementById("mlGate"), text = document.getElementById("mlText"), prog = document.getElementById("mlProg");
   const bulbs = [...gate.querySelectorAll(".ml-bulb")], gf = document.getElementById("mlGFace"), ge = document.getElementById("mlGExt");
   const N = bulbs.length, t0 = performance.now();
+  const FROM_BOOK = /from-book/.test(location.hash);   // arriving from the storybook: no need to dwell on the loader
   let shown = 0, done = false, last = t0;
   const stage = () => {
     if (window.__busReady && window.__sceneReady) return [100, 'Bills <s aria-label="bobs, crossed out">bobs</s> your uncle'];
@@ -327,7 +330,7 @@ body.cur-rsvp #ret-label .spk { display: none; }
   function tick(now) {
     const [goal, label] = stage();
     // never move faster than the bulbs can light; a short minimum so it reads as a sequence
-    const cap = Math.min(goal, (now - t0) / 14);
+    const cap = Math.min(goal, (now - t0) / (FROM_BOOK ? 5 : 14));
     const dt = Math.min(100, now - last); last = now;
     shown += (cap - shown) * (1 - Math.exp(-dt / 110));   // time-based, so slow devices finish on time
     if (cap - shown < 0.8) shown = cap;
@@ -339,7 +342,7 @@ body.cur-rsvp #ret-label .spk { display: none; }
     ge.setAttribute("opacity", (0.6 * shown / 100).toFixed(3));
     if (shown >= 100 && !done) {
       done = true;
-      setTimeout(() => { gate.classList.add("ml-out"); setTimeout(() => gate.remove(), 700); }, 420);
+      setTimeout(() => { gate.classList.add("ml-out"); setTimeout(() => gate.remove(), 700); }, FROM_BOOK ? 120 : 420);
       return;
     }
     requestAnimationFrame(tick);
@@ -621,7 +624,8 @@ function tickIntro(dt) {
   if (INTRO.t < 0) {
     renderer.toneMappingExposure = 0;
     if (window.__ready) collectUnlit();
-    if (!window.__ready || document.getElementById('mlGate')) return;
+    const gate = document.getElementById('mlGate');
+    if (!window.__ready || (gate && !gate.classList.contains('ml-out'))) return;
     INTRO.t = 0;
   }
   INTRO.t += dt; if (window.__introHold != null) INTRO.t = window.__introHold;
