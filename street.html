@@ -375,7 +375,7 @@ body.cur-rsvp #ret-label .spk { display: none; }
   
   <div class="rsvp-head">
     <p class="rsvp-pitch" id="rsvpPitch">14 December 2026 · Dominion Theatre</p>
-    <p class="rsvp-sub" id="rsvpSub">Doors 6:30pm · Curtain 7:30pm</p>
+    <p class="rsvp-sub" id="rsvpSub">Doors 18:30 · Curtain 19:30</p>
     <p class="rsvp-gift">Tickets are on us.</p>
   </div>
   <div class="rsvp-cta-wrap">
@@ -1200,6 +1200,7 @@ const rsvpSign = (() => {
   gg.fillStyle = grd; gg.fillRect(0, 0, 128, 128);
   const glow = new THREE.Mesh(new THREE.PlaneGeometry(SW * 1.5, h * s * 2.0), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(gc), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }));
   glow.position.z = 0.02; root.add(glow);
+  root.visible = false;   // hidden for now (and no longer a hover/click target); set to true to bring the sign back
   return root;
 })();
 
@@ -1301,10 +1302,10 @@ function wetPlane(x0, x1, z0, z1, y, mask, tile, str, res) {
 const HOT = [
   { id: 'bus', match: n => n.startsWith('bus_'), action: 'honk', label: 'Play video', noGlow: true,
     title: 'Next stop: the West End', kicker: 'Tottenham Court Road · Dominion Theatre',
-    text: 'Every invoice on board, every one paid on time. Hop off at the Dominion Theatre on 14 December 2026. Doors 6:30pm, curtain 7:30pm.', cta: '' },
+    text: 'Every invoice on board, every one paid on time. Hop off at the Dominion Theatre on 14 December 2026. Doors 18:30, curtain 19:30.', cta: '' },
   { id: 'billboard', objs: () => [screensFx.billboard], action: 'video',
     title: 'Bill Pay: The West End Musical!', kicker: '',
-    text: 'One night only at the Dominion Theatre, 14 December 2026. Doors 6:30pm, curtain 7:30pm.', cta: '' },
+    text: 'One night only at the Dominion Theatre, 14 December 2026. Doors 18:30, curtain 19:30.', cta: '' },
   { id: 'doors', objs: () => doorVid.map(d => d.mesh), action: 'video',
     title: 'Bill Pay: The Musical', kicker: '',
     text: 'Before the West End, Bill Pay played a single night in New York with Billy Porter, Billy Zane and Jessica Vosk. See how it went.', cta: '' },
@@ -1320,9 +1321,6 @@ const HOT = [
   { id: 'cast3', objs: () => [lightboxes.groups()[3]], action: 'rsvp',
     title: 'Starring', kicker: '',
     text: 'Alan Carr, Hannah Waddingham, Marisha Wallace and Rachel Tucker. One night only at the Dominion Theatre, 14 December 2026.', cta: '' },
-  { id: 'rsvpSign', objs: () => [rsvpSign], action: 'rsvp',
-    title: 'RSVP', kicker: '',
-    text: 'One night only at the Dominion Theatre, 14 December 2026. Doors 6:30pm, curtain 7:30pm.', cta: '' },
 ];
 const hotState = { cur: null, xy: null, ready: false };
 window.__hotCur = () => hotState.cur;
